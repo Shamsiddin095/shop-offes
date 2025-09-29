@@ -1,0 +1,9 @@
+{
+  "name": "navbat-server",
+  "version": "1.0.0",
+  "main": "api/register.js",
+  "type": "module",
+  "dependencies": {
+    "mongodb": "^6.0.0"
+  }
+}

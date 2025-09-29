@@ -1,0 +1,64 @@
+{
+  "zaprafkalar": [
+    {
+      "id": 101,
+      "nomi": "Metan zaprafkasi 1",
+      "manzil": "Toshkent sh., Chilonzor 10",
+      "xizmat_nomi": "Metan",
+      "narx_1kub": 3800,
+      "kalonkalar": [
+        { "kalonka_id": 1, "kalonka_nomi": "Kalonka 1", "navbat": [] },
+        { "kalonka_id": 2, "kalonka_nomi": "Kalonka 2", "navbat": [] },
+        { "kalonka_id": 3, "kalonka_nomi": "Kalonka 3", "navbat": [] },
+        { "kalonka_id": 4, "kalonka_nomi": "Kalonka 4", "navbat": [] },
+        { "kalonka_id": 5, "kalonka_nomi": "Kalonka 5", "navbat": [] },
+        { "kalonka_id": 6, "kalonka_nomi": "Kalonka 6", "navbat": [] }
+      ]
+    },
+    {
+      "id": 102,
+      "nomi": "Metan zaprafkasi 2",
+      "manzil": "Toshkent sh., Shayxontohur 5",
+      "xizmat_nomi": "Metan",
+      "narx_1kub": 3800,
+      "kalonkalar": [
+        { "kalonka_id": 1, "kalonka_nomi": "Kalonka 1", "navbat": [] },
+        { "kalonka_id": 2, "kalonka_nomi": "Kalonka 2", "navbat": [] },
+        { "kalonka_id": 3, "kalonka_nomi": "Kalonka 3", "navbat": [] },
+        { "kalonka_id": 4, "kalonka_nomi": "Kalonka 4", "navbat": [] },
+        { "kalonka_id": 5, "kalonka_nomi": "Kalonka 5", "navbat": [] },
+        { "kalonka_id": 6, "kalonka_nomi": "Kalonka 6", "navbat": [] }
+      ]
+    },
+    {
+      "id": 103,
+      "nomi": "Propan zaprafkasi 1",
+      "manzil": "Toshkent sh., Yunusobod 8",
+      "xizmat_nomi": "Propan",
+      "narx_1kub": 4500,
+      "kalonkalar": [
+        { "kalonka_id": 1, "kalonka_nomi": "Kalonka 1", "navbat": [] },
+        { "kalonka_id": 2, "kalonka_nomi": "Kalonka 2", "navbat": [] },
+        { "kalonka_id": 3, "kalonka_nomi": "Kalonka 3", "navbat": [] },
+        { "kalonka_id": 4, "kalonka_nomi": "Kalonka 4", "navbat": [] },
+        { "kalonka_id": 5, "kalonka_nomi": "Kalonka 5", "navbat": [] },
+        { "kalonka_id": 6, "kalonka_nomi": "Kalonka 6", "navbat": [] }
+      ]
+    },
+    {
+      "id": 104,
+      "nomi": "Benzin zaprafkasi 1",
+      "manzil": "Toshkent sh., Mirzo Ulug‘bek 3",
+      "xizmat_nomi": "Benzin",
+      "narx_1kub": 12000,
+      "kalonkalar": [
+        { "kalonka_id": 1, "kalonka_nomi": "Kalonka 1", "navbat": [] },
+        { "kalonka_id": 2, "kalonka_nomi": "Kalonka 2", "navbat": [] },
+        { "kalonka_id": 3, "kalonka_nomi": "Kalonka 3", "navbat": [] },
+        { "kalonka_id": 4, "kalonka_nomi": "Kalonka 4", "navbat": [] },
+        { "kalonka_id": 5, "kalonka_nomi": "Kalonka 5", "navbat": [] },
+        { "kalonka_id": 6, "kalonka_nomi": "Kalonka 6", "navbat": [] }
+      ]
+    }
+  ]
+}
