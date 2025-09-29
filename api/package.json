@@ -4,6 +4,7 @@
   "main": "api/register.js",
   "type": "module",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "mongodb": "^6.0.0"
   }
 }

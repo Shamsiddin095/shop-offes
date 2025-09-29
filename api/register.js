@@ -1,4 +1,5 @@
 import { connectDB } from './db.js';
+import bcrypt from 'bcryptjs'; // ✅ parolni hash qilish uchun
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -25,12 +26,15 @@ export default async function handler(req, res) {
         .json({ message: '❌ Bu telefon raqam ro‘yxatda mavjud' });
     }
 
+    // ✅ Parolni hash qilish
+    const hashedPassword = await bcrypt.hash(parol, 10);
+
     await users.insertOne({
       ism,
       familiya,
       dukon,
       telefon,
-      parol,
+      parol: hashedPassword, // 🔑 oddiy emas, hashlangan parol saqlanadi
       createdAt: new Date(),
     });
 
