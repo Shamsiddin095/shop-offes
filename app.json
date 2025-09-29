@@ -12,7 +12,7 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "package": "com.shamsiddin.navbatapp",
+      "package": "com.shamsiddin.qarz-daftar",
       "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
@@ -20,7 +20,7 @@
       }
     },
     "extra": {
-      "API_URL": "https://navbat-local.vercel.app/api"
+      "API_URL": "https://shop-offes.vercel.app/api"
     }
   }
 }

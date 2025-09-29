@@ -1,5 +1,5 @@
 {
-  "name": "navbat-server",
+  "name": "qarz-daftar",
   "version": "1.0.0",
   "main": "api/register.js",
   "type": "module",

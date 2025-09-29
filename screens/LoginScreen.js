@@ -1,71 +1,92 @@
 import React, { useState } from 'react';
-import { View, Text, Alert, StyleSheet, ScrollView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 
-import Input from '../components/Input';
-import Button from '../components/Button';
-import Constants from 'expo-constants';
-
-const API_URL = Constants.expoConfig.extra.API_URL;
-
-export default function LoginScreen() {
-  const navigation = useNavigation();
-  const [tel, setTel] = useState('+998');
+export default function LoginScreen({ navigation }) {
+  const [telefon, setTelefon] = useState('');
   const [parol, setParol] = useState('');
 
   const handleLogin = async () => {
-    if (!tel || !parol) {
-      Alert.alert('❌ Xato', 'Iltimos, barcha maydonlarni to‘ldiring');
-      return;
-    }
-
     try {
-      const res = await fetch(`${API_URL}/login`, {
+      const res = await fetch('https://shop-offes.vercel.app/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tel, parol }),
+        body: JSON.stringify({ telefon, parol }),
       });
+
       const data = await res.json();
 
-      if (res.ok) {
-        await AsyncStorage.setItem('userTel', tel);
-        await AsyncStorage.setItem('userParol', parol);
-        navigation.navigate('Profile', { tel });
+      if (res.status === 200) {
+        Alert.alert('✅ Muvaffaqiyatli', data.message);
+        navigation.replace('Home', { user: data.user }); // foydalanuvchi ma’lumotlari bilan
       } else {
-        Alert.alert('❌ Xato', data.message || 'Telefon yoki parol noto‘g‘ri');
+        Alert.alert('❌ Xato', data.message);
       }
-    } catch (err) {
-      console.error(err);
-      Alert.alert('❌ Xato', 'Serverga ulanib bo‘lmadi');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('❌ Server bilan bog‘lanishda xatolik');
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Kirish</Text>
-      <Input
-        placeholder="+998901234567"
-        value={tel}
-        onChangeText={setTel}
+    <View style={styles.container}>
+      <Text style={styles.title}>🔑 Kirish</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Telefon raqamingiz"
         keyboardType="phone-pad"
+        value={telefon}
+        onChangeText={setTelefon}
       />
-      <Input
-        placeholder="Parol"
+      <TextInput
+        style={styles.input}
+        placeholder="Parolingiz"
+        secureTextEntry
         value={parol}
         onChangeText={setParol}
-        secureTextEntry
       />
-      <Button title="Kirish" onPress={handleLogin} />
-      <Button
-        title="Ro‘yxatdan o‘tish"
-        onPress={() => navigation.navigate('Register')}
-      />
-    </ScrollView>
+
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Kirish</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+        <Text style={styles.link}>Ro‘yxatdan o‘tish</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 24, textAlign: 'center', marginBottom: 20 },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  input: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+  },
+  button: {
+    backgroundColor: 'blue',
+    padding: 15,
+    borderRadius: 5,
+    marginTop: 10,
+    width: '100%',
+  },
+  buttonText: { color: '#fff', fontWeight: 'bold', textAlign: 'center' },
+  link: { color: 'blue', marginTop: 15 },
 });

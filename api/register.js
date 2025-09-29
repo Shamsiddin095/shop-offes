@@ -1,71 +1,44 @@
 import { connectDB } from './db.js';
-import bcrypt from 'bcrypt';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ message: '❌ Faqat POST ruxsat etiladi' });
   }
 
   try {
     const db = await connectDB();
-    const { ism, tel, parol, mashina, texpasport, role } = req.body;
+    const users = db.collection('users');
 
-    if (!ism || !tel || !parol || !role) {
+    const { ism, familiya, dukon, telefon, parol } = req.body;
+
+    if (!ism || !familiya || !dukon || !telefon || !parol) {
       return res
         .status(400)
-        .json({ message: 'Barcha majburiy maydonlar kiritilishi kerak' });
+        .json({ message: '❌ Barcha maydonlarni to‘ldiring' });
     }
 
-    // Admin uchun mashina va texpasport talab qilinmaydi
-    if (role !== 'admin' && (!mashina || !texpasport)) {
-      return res.status(400).json({
-        message: 'Mashina va texpasport majburiy foydalanuvchi uchun',
-      });
+    // Telefon raqam unikal bo‘lishi kerak
+    const existing = await users.findOne({ telefon });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: '❌ Bu telefon raqam ro‘yxatda mavjud' });
     }
 
-    // Takrorlanishni tekshirish
-    let exists;
-    if (role === 'admin') {
-      // Admin faqat telefon raqam bo‘yicha tekshiriladi
-      exists = await db.collection('users').findOne({ tel });
-    } else {
-      // Oddiy user tel, mashina va texpasport bo‘yicha tekshiriladi
-      exists = await db.collection('users').findOne({
-        $or: [{ tel }, { mashina }, { texpasport }],
-      });
-    }
-
-    if (exists) {
-      return res.status(409).json({
-        message:
-          role === 'admin'
-            ? 'Bu telefon raqam bilan admin allaqachon mavjud'
-            : 'Bu telefon raqam, mashina raqami yoki texpasport raqami bilan foydalanuvchi allaqachon mavjud',
-      });
-    }
-
-    // Parolni xeshlash
-    const hashedPassword = await bcrypt.hash(parol, 10);
-
-    // Yangi foydalanuvchini qo‘shish
-    const newUser = {
+    await users.insertOne({
       ism,
-      tel,
-      parol: hashedPassword,
-      role,
-      mashina: role === 'admin' ? '' : mashina,
-      texpasport: role === 'admin' ? '' : texpasport,
-      balance: 0,
+      familiya,
+      dukon,
+      telefon,
+      parol,
       createdAt: new Date(),
-    };
-
-    await db.collection('users').insertOne(newUser);
+    });
 
     return res
       .status(201)
-      .json({ message: 'Foydalanuvchi muvaffaqiyatli ro‘yxatdan o‘tdi' });
+      .json({ message: '✅ Ro‘yxatdan o‘tish muvaffaqiyatli' });
   } catch (error) {
-    console.error('❌ Register error:', error);
-    return res.status(500).json({ message: 'Server xatosi' });
+    console.error(error);
+    return res.status(500).json({ message: '❌ Server xatosi' });
   }
 }
