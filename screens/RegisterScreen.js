@@ -7,67 +7,122 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import * as Speech from 'expo-speech'; // 🔊 ovoz uchun
+import * as Speech from 'expo-speech';
+import Constants from 'expo-constants';
 
+const API_URL = Constants.expoConfig.extra.API_URL;
 export default function RegisterScreen({ navigation }) {
   const [ism, setIsm] = useState('');
   const [familiya, setFamiliya] = useState('');
   const [dukon, setDukon] = useState('');
-  const [telefon, setTelefon] = useState('');
+  const [telefon, setTelefon] = useState('+998');
   const [parol, setParol] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  // 🔊 Sahifa ochilganda ovoz chiqarish
+  // xatolik ovozi 1 marta aytilishi uchun flaglar
+  const [nameErrorSpoken, setNameErrorSpoken] = useState(false);
+  const [phoneErrorSpoken, setPhoneErrorSpoken] = useState(false);
+  const [passErrorSpoken, setPassErrorSpoken] = useState(false);
+
   useEffect(() => {
     const matn =
-      "Salom hujayin, sizni ko'rganimdan hursandman. Iltimos, o'zingizni tanishtiring!";
-    Speech.speak(matn, { language: 'uz-UZ' });
+      'Здравствуйте хозяин, я рад вас видеть. Пожалуйста, представьтесь!';
+    Speech.speak(matn, { language: 'ru-RU' });
   }, []);
 
-  // 🔊 Ismni tekshirish (faqat harflar)
   const handleIsmChange = (text) => {
     setIsm(text);
     const regex = /^[A-Za-z\u0400-\u04FF\s]+$/;
     if (text && !regex.test(text)) {
-      Speech.speak('Hujayin, ismingizni harflarda kiriting iltimos!', {
-        language: 'uz-UZ',
-      });
+      if (!nameErrorSpoken) {
+        Speech.speak('Хозяин, введите имя только буквами пожалуйста!', {
+          language: 'ru-RU',
+        });
+        setNameErrorSpoken(true);
+      }
+    } else {
+      if (nameErrorSpoken) setNameErrorSpoken(false);
     }
   };
 
-  // 🔊 Telefonni tekshirish (faqat raqamlar)
   const handleTelefonChange = (text) => {
-    setTelefon(text);
-    const regex = /^[0-9]+$/;
-    if (text && !regex.test(text)) {
-      Speech.speak(
-        'Hujayin, telefon raqamingizni faqat raqamlarda kiriting iltimos!',
-        { language: 'uz-UZ' },
-      );
+    let filtered = text.replace(/[^0-9+]/g, '');
+    if (!filtered.startsWith('+')) {
+      if (filtered.startsWith('998')) {
+        filtered = '+' + filtered;
+      }
+    }
+    if (filtered === '+') {
+      filtered = '+998';
+    }
+    if (filtered.startsWith('+998')) {
+      const rest = filtered.slice(4).replace(/[^0-9]/g, '');
+      const limited = rest.slice(0, 9);
+      filtered = '+998' + limited;
+    } else {
+      filtered = filtered.slice(0, 13);
+    }
+
+    setTelefon(filtered);
+
+    const fullRegex = /^\+998[0-9]{9}$/;
+    if (!fullRegex.test(filtered)) {
+      if (!phoneErrorSpoken) {
+        Speech.speak(
+          'Хозяин, введите номер телефона в формате: +998912345678 пожалуйста!',
+          { language: 'ru-RU' },
+        );
+        setPhoneErrorSpoken(true);
+      }
+    } else {
+      if (phoneErrorSpoken) setPhoneErrorSpoken(false);
     }
   };
 
-  // 🔊 Parolni tekshirish (kamida 6 belgi)
   const handleParolChange = (text) => {
     setParol(text);
     if (text && text.length < 6) {
-      Speech.speak(
-        "Hujayin, parolingiz kamida olti belgidan iborat bo'lishi kerak!",
-        { language: 'uz-UZ' },
-      );
+      if (!passErrorSpoken) {
+        Speech.speak(
+          'Хозяин, пароль должен содержать минимум шесть символов!',
+          { language: 'ru-RU' },
+        );
+        setPassErrorSpoken(true);
+      }
+    } else {
+      if (passErrorSpoken) setPassErrorSpoken(false);
     }
   };
 
-  // Ro‘yxatdan o‘tish
   const handleRegister = async () => {
+    const fullPhoneRegex = /^\+998[0-9]{9}$/;
+    const nameRegex = /^[A-Za-z\u0400-\u04FF\s]+$/;
+
     if (!ism || !familiya || !dukon || !telefon || !parol) {
-      Speech.speak("Hujayin, barcha maydonlarni to'ldiring iltimos!", {
-        language: 'uz-UZ',
+      Speech.speak('Пожалуйста, заполните все поля!', { language: 'ru-RU' });
+      return;
+    }
+    if (!nameRegex.test(ism)) {
+      Speech.speak('Хозяин, введите имя только буквами пожалуйста!', {
+        language: 'ru-RU',
+      });
+      return;
+    }
+    if (!fullPhoneRegex.test(telefon)) {
+      Speech.speak('Хозяин, телефон должен быть в формате +998912345678', {
+        language: 'ru-RU',
+      });
+      return;
+    }
+    if (parol.length < 6) {
+      Speech.speak('Хозяин, пароль слишком короткий, минимум 6 символов', {
+        language: 'ru-RU',
       });
       return;
     }
 
     try {
-      const res = await fetch('https://shop-offes.vercel.app/api/register', {
+      const res = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ism, familiya, dukon, telefon, parol }),
@@ -76,20 +131,16 @@ export default function RegisterScreen({ navigation }) {
       const data = await res.json();
 
       if (res.status === 201) {
-        Speech.speak("Ro'yxatdan o'tish muvaffaqiyatli!", {
-          language: 'uz-UZ',
-        });
+        Speech.speak('Регистрация прошла успешно!', { language: 'ru-RU' });
         Alert.alert('✅ Muvaffaqiyatli', data.message);
         navigation.replace('Home');
       } else {
-        Speech.speak("Ro'yxatdan o'tishda xatolik yuz berdi", {
-          language: 'uz-UZ',
-        });
+        Speech.speak('Ошибка при регистрации', { language: 'ru-RU' });
         Alert.alert('❌ Xato', data.message);
       }
     } catch (error) {
       console.error(error);
-      Speech.speak("Server bilan bog'lanishda xatolik", { language: 'uz-UZ' });
+      Speech.speak('Ошибка сервера. Попробуйте позже', { language: 'ru-RU' });
       Alert.alert('❌ Server bilan bog‘lanishda xatolik');
     }
   };
@@ -120,18 +171,29 @@ export default function RegisterScreen({ navigation }) {
       />
       <TextInput
         style={styles.input}
-        placeholder="Telefon raqamingiz"
+        placeholder="+998912345678"
         keyboardType="phone-pad"
         value={telefon}
         onChangeText={handleTelefonChange}
+        maxLength={13}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Parolingiz"
-        secureTextEntry
-        value={parol}
-        onChangeText={handleParolChange}
-      />
+
+      {/* 🔑 Parol + Emoji toggle */}
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Parolingiz (kamida 6 belgi)"
+          secureTextEntry={!showPassword}
+          value={parol}
+          onChangeText={handleParolChange}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.iconContainer}
+        >
+          <Text style={styles.icon}>{showPassword ? '🙉' : '🙈'}</Text>
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Ro‘yxatdan o‘tish</Text>
@@ -157,11 +219,32 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     borderRadius: 5,
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    marginVertical: 5,
+    width: '100%',
+    paddingRight: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 10,
+  },
+  iconContainer: {
+    paddingHorizontal: 5,
+  },
+  icon: {
+    fontSize: 22,
+  },
   button: {
     backgroundColor: 'green',
     padding: 15,
     borderRadius: 5,
     marginTop: 10,
+    width: '100%',
   },
   buttonText: { color: '#fff', fontWeight: 'bold', textAlign: 'center' },
 });

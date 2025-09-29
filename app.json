@@ -5,17 +5,17 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/newicon.png",
     "splash": {
-      "image": "./assets/icon.png",
+      "image": "./assets/newicon.png",
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "android": {
       "package": "com.shamsiddin.shopoffes",
-      "icon": "./assets/icon.png",
+      "icon": "./assets/newicon.png",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/newicon.png",
         "backgroundColor": "#ffffff"
       }
     },
