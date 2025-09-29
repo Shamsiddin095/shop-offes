@@ -7,10 +7,12 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import * as Speech from 'expo-speech';
 import Constants from 'expo-constants';
 
 const API_URL = Constants.expoConfig.extra.API_URL;
+
 export default function RegisterScreen({ navigation }) {
   const [ism, setIsm] = useState('');
   const [familiya, setFamiliya] = useState('');
@@ -146,7 +148,11 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={styles.container}
+      enableOnAndroid={true}
+      extraScrollHeight={20}
+    >
       <Text style={styles.title}>Salom hujayin 👋</Text>
       <Text style={styles.subtitle}>Sizni ko‘rganimdan hursandman!</Text>
       <Text style={styles.subtitle}>Iltimos, o‘zingizni tanishtiring</Text>
@@ -198,13 +204,13 @@ export default function RegisterScreen({ navigation }) {
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Ro‘yxatdan o‘tish</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,

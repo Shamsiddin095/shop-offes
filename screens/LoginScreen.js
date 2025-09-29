@@ -10,7 +10,10 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
 import Constants from 'expo-constants';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
 const API_URL = Constants.expoConfig.extra.API_URL;
+
 export default function LoginScreen({ navigation }) {
   const [telefon, setTelefon] = useState('+998');
   const [parol, setParol] = useState('');
@@ -34,10 +37,7 @@ export default function LoginScreen({ navigation }) {
 
       if (res.status === 200) {
         Speech.speak('Добро пожаловать, хозяин!', { language: 'ru-RU' });
-
-        // 🔥 Foydalanuvchini AsyncStorage ga saqlaymiz
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
-
         navigation.replace('Home');
       } else {
         Speech.speak('Неверный телефон или пароль', { language: 'ru-RU' });
@@ -51,46 +51,56 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Kirish</Text>
+    <KeyboardAwareScrollView
+      contentContainerStyle={styles.scrollContainer}
+      enableOnAndroid={true}
+      extraScrollHeight={20}
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>Kirish</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="+998912345678"
-        keyboardType="phone-pad"
-        value={telefon}
-        onChangeText={setTelefon}
-      />
-
-      {/* 🔑 Parol + Emoji toggle */}
-      <View style={styles.passwordContainer}>
         <TextInput
-          style={styles.passwordInput}
-          placeholder="Parolingiz"
-          secureTextEntry={!showPassword}
-          value={parol}
-          onChangeText={setParol}
+          style={styles.input}
+          placeholder="+998912345678"
+          keyboardType="phone-pad"
+          value={telefon}
+          onChangeText={setTelefon}
         />
-        <TouchableOpacity
-          onPress={() => setShowPassword(!showPassword)}
-          style={styles.iconContainer}
-        >
-          <Text style={styles.icon}>{showPassword ? '🙉' : '🙈'}</Text>
+
+        {/* 🔑 Parol + Emoji toggle */}
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Parolingiz"
+            secureTextEntry={!showPassword}
+            value={parol}
+            onChangeText={setParol}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.iconContainer}
+          >
+            <Text style={styles.icon}>{showPassword ? '🙉' : '🙈'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Kirish</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <Text style={styles.link}>Ro‘yxatdan o‘tish</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Kirish</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.link}>Ro‘yxatdan o‘tish</Text>
-      </TouchableOpacity>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
