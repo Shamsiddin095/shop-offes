@@ -1,31 +1,44 @@
-import OpenAI from 'openai';
-import { IncomingForm } from 'formidable';
+// pages/api/speech.js
+import nextConnect from 'next-connect';
+import multer from 'multer';
 import fs from 'fs';
+import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export const config = { api: { bodyParser: false } };
+// Multer konfiguratsiyasi (temp folder /tmp/ da saqlaydi)
+const upload = multer({ dest: '/tmp/' });
 
-export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    const form = new IncomingForm();
+const apiRoute = nextConnect({
+  onError(error, req, res) {
+    res.status(500).json({ error: `Server xatolik: ${error.message}` });
+  },
+  onNoMatch(req, res) {
+    res.status(405).json({ error: `Method ${req.method} not allowed` });
+  },
+});
 
-    form.parse(req, async (err, fields, files) => {
-      if (err) return res.status(500).json({ error: err.message });
-      try {
-        const fileStream = fs.createReadStream(files.file.filepath);
+apiRoute.use(upload.single('file')); // RN FormData key: 'file'
 
-        const whisperResp = await openai.audio.transcriptions.create({
-          file: fileStream,
-          model: 'whisper-1',
-        });
+apiRoute.post(async (req, res) => {
+  try {
+    const filePath = req.file.path; // multer temp fayl
+    const fileStream = fs.createReadStream(filePath);
 
-        res.status(200).json({ text: whisperResp.text });
-      } catch (e) {
-        res.status(500).json({ error: e.message });
-      }
+    const whisperResp = await openai.audio.transcriptions.create({
+      file: fileStream,
+      model: 'whisper-1',
     });
-  } else {
-    res.status(405).json({ message: 'Method not allowed' });
+
+    res.status(200).json({ text: whisperResp.text });
+
+    // Temp faylni o'chirish
+    fs.unlinkSync(filePath);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
-}
+});
+
+export const config = { api: { bodyParser: false } };
+export default apiRoute;

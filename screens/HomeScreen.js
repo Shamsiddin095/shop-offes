@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Platform,
+} from 'react-native';
 import { Audio } from 'expo-av';
 import Constants from 'expo-constants';
 
@@ -11,16 +18,13 @@ export default function HomeScreen() {
 
   const startRecording = async () => {
     try {
-      const permission = await Audio.requestPermissionsAsync();
-      if (permission.status !== 'granted') {
-        Alert.alert('Xatolik', 'Iltimos, mikrofon ruxsatini bering');
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Xatolik', 'Mikrofon uchun ruxsat berilmadi!');
         return;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true });
 
       const rec = new Audio.Recording();
       await rec.prepareToRecordAsync(
@@ -36,13 +40,11 @@ export default function HomeScreen() {
 
   const stopRecording = async () => {
     try {
-      if (!recording) return;
-
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
 
-      // Backendga audio yuborish
+      // FormData yaratish
       const formData = new FormData();
       formData.append('file', {
         uri,
@@ -50,43 +52,34 @@ export default function HomeScreen() {
         type: 'audio/wav',
       });
 
-      const speechRes = await fetch(`${API_URL}/speech`, {
+      const res = await fetch(`${API_URL}/speech`, {
         method: 'POST',
         body: formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const speechData = await speechRes.json();
-      if (speechRes.ok) {
-        const text = speechData.text;
-
-        // Backendga matn yuborish (GPT)
-        const analyzeRes = await fetch(`${API_URL}/analyze`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text }),
-        });
-
-        const analyzeData = await analyzeRes.json();
-        setResult(analyzeData.output);
+      const data = await res.json();
+      if (res.status === 200) {
+        setResult(data.text);
       } else {
-        Alert.alert('Xatolik', speechData.error || 'Server javobi xato');
+        Alert.alert('Xatolik', data.error || 'Server xatosi');
       }
     } catch (err) {
       console.error(err);
-      Alert.alert('Xatolik', 'Ovoz tanib olish yoki tahlil qilishda xatolik');
+      Alert.alert('Xatolik', 'Ovoz tanib olishda xatolik');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🎤 Ovoz orqali zamon aniqlash va tarjima</Text>
+      <Text style={styles.title}>🎤 Ovoz orqali matn</Text>
 
       <TouchableOpacity
         style={styles.button}
         onPress={startRecording}
         disabled={recording !== null}
       >
-        <Text style={styles.buttonText}>Ovoz yozishni boshlash</Text>
+        <Text style={styles.buttonText}>Yozishni boshlash</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -94,7 +87,7 @@ export default function HomeScreen() {
         onPress={stopRecording}
         disabled={recording === null}
       >
-        <Text style={styles.buttonText}>Ovoz yozishni to‘xtatish</Text>
+        <Text style={styles.buttonText}>Yozishni to‘xtatish</Text>
       </TouchableOpacity>
 
       <Text style={styles.result}>{result}</Text>
@@ -109,12 +102,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
   button: {
     backgroundColor: '#007bff',
     padding: 15,
