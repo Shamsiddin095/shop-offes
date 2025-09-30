@@ -7,10 +7,10 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import * as Audio from 'expo-av';
 import Constants from 'expo-constants';
 
-const API_URL = Constants.expoConfig.extra.API_URL;
+const API_URL = Constants.expoConfig.extra.API_URL; // Vercel API url
 
 export default function HomeScreen() {
   const [recording, setRecording] = useState(null);
@@ -18,13 +18,16 @@ export default function HomeScreen() {
 
   const startRecording = async () => {
     try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Xatolik', 'Mikrofon uchun ruxsat berilmadi!');
+      const permission = await Audio.requestPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Ruxsat kerak', 'Iltimos, mikrofon ruxsatini bering');
         return;
       }
 
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true });
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
 
       const rec = new Audio.Recording();
       await rec.prepareToRecordAsync(
@@ -32,19 +35,21 @@ export default function HomeScreen() {
       );
       await rec.startAsync();
       setRecording(rec);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       Alert.alert('Xatolik', 'Ovoz yozishni boshlashda xatolik yuz berdi');
     }
   };
 
   const stopRecording = async () => {
     try {
+      if (!recording) return;
+
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
 
-      // FormData yaratish
+      // Audio faylni FormData bilan yuborish
       const formData = new FormData();
       formData.append('file', {
         uri,
@@ -52,42 +57,44 @@ export default function HomeScreen() {
         type: 'audio/wav',
       });
 
-      const res = await fetch(`${API_URL}/speech`, {
+      const response = await fetch(`${API_URL}/speech`, {
         method: 'POST',
         body: formData,
-        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const data = await res.json();
-      if (res.status === 200) {
+      const data = await response.json();
+      if (response.ok) {
         setResult(data.text);
       } else {
-        Alert.alert('Xatolik', data.error || 'Server xatosi');
+        Alert.alert('Server xatoligi', data.error || 'Audio serverda xatolik');
       }
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Xatolik', 'Ovoz tanib olishda xatolik');
+    } catch (error) {
+      console.error(error);
+      Alert.alert(
+        'Xatolik',
+        'Ovoz yuborishda yoki tahlil qilishda xatolik yuz berdi',
+      );
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🎤 Ovoz orqali matn</Text>
+      <Text style={styles.title}>🎤 Ovoz orqali tanib olish</Text>
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, recording && { backgroundColor: 'gray' }]}
         onPress={startRecording}
-        disabled={recording !== null}
+        disabled={!!recording}
       >
-        <Text style={styles.buttonText}>Yozishni boshlash</Text>
+        <Text style={styles.buttonText}>Ovoz yozishni boshlash</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, !recording && { backgroundColor: 'gray' }]}
         onPress={stopRecording}
-        disabled={recording === null}
+        disabled={!recording}
       >
-        <Text style={styles.buttonText}>Yozishni to‘xtatish</Text>
+        <Text style={styles.buttonText}>Ovoz yozishni to‘xtatish</Text>
       </TouchableOpacity>
 
       <Text style={styles.result}>{result}</Text>
@@ -102,7 +109,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
   button: {
     backgroundColor: '#007bff',
     padding: 15,
@@ -111,6 +123,13 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
   },
-  buttonText: { color: '#fff', fontWeight: 'bold' },
-  result: { marginTop: 30, fontSize: 16, textAlign: 'center' },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  result: {
+    marginTop: 30,
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });
