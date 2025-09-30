@@ -5,22 +5,23 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { text } = req.body;
-    if (!text) return res.status(400).json({ error: 'Text is required' });
+
+    if (!text) return res.status(400).json({ error: 'Matn topilmadi' });
 
     try {
       const gptResp = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content:
-              "Siz foydalanuvchi gapini o'qib, ingliz tilidagi zamonni aniqlaysiz va o'zbek tarjimasini berasiz. Natija quyidagi formatda bo'lsin: 'Zamon: ... | Tarjima: ...'",
+            content: 'Siz foydalanuvchining matnini tahlil qilasiz.',
           },
           { role: 'user', content: text },
         ],
       });
 
       const output = gptResp.choices[0].message.content;
+
       res.status(200).json({ output });
     } catch (e) {
       res.status(500).json({ error: e.message });

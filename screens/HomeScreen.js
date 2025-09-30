@@ -11,18 +11,8 @@ export default function HomeScreen() {
 
   const startRecording = async () => {
     try {
-      // Microphone permissions
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Xatolik', 'Ilovaga mikrofon ruxsati kerak');
-        return;
-      }
-
-      // Audio mode
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true });
 
       const rec = new Audio.Recording();
       await rec.prepareToRecordAsync(
@@ -38,48 +28,33 @@ export default function HomeScreen() {
 
   const stopRecording = async () => {
     try {
-      if (!recording) return;
-
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
 
-      if (!uri) {
-        Alert.alert('Xatolik', 'Audio fayl olinmadi');
-        return;
-      }
-
-      // Backendga audio yuborish
       const formData = new FormData();
-      formData.append('file', { uri, name: 'record.wav', type: 'audio/wav' });
+      formData.append('file', {
+        uri,
+        name: 'record.wav',
+        type: 'audio/wav',
+      });
 
+      // Whisper API
       const speechRes = await fetch(`${API_URL}/speech`, {
         method: 'POST',
         body: formData,
       });
-
-      if (!speechRes.ok) {
-        Alert.alert('Xatolik', 'Audio serverga yuborilmadi');
-        return;
-      }
-
       const speechData = await speechRes.json();
-      const text = speechData.text || '';
+      const text = speechData.text;
 
-      // Backendga matn yuborish (GPT)
+      // GPT analyze API
       const analyzeRes = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
-
-      if (!analyzeRes.ok) {
-        Alert.alert('Xatolik', 'Matn serverga yuborilmadi');
-        return;
-      }
-
       const analyzeData = await analyzeRes.json();
-      setResult(analyzeData.output || 'Natija topilmadi');
+      setResult(analyzeData.output);
     } catch (err) {
       console.error(err);
       Alert.alert('Xatolik', 'Ovoz tanib olish yoki tahlil qilishda xatolik');
@@ -88,10 +63,10 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🎤 Ovoz orqali zamon aniqlash va tarjima</Text>
+      <Text style={styles.title}>🎤 Ovoz orqali tahlil</Text>
 
       <TouchableOpacity
-        style={[styles.button, recording ? styles.buttonDisabled : {}]}
+        style={styles.button}
         onPress={startRecording}
         disabled={recording !== null}
       >
@@ -99,7 +74,7 @@ export default function HomeScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, !recording ? styles.buttonDisabled : {}]}
+        style={styles.button}
         onPress={stopRecording}
         disabled={recording === null}
       >
@@ -117,7 +92,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 20,
@@ -133,16 +107,6 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
   },
-  buttonDisabled: {
-    backgroundColor: '#999',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  result: {
-    marginTop: 30,
-    fontSize: 16,
-    textAlign: 'center',
-  },
+  buttonText: { color: '#fff', fontWeight: 'bold' },
+  result: { marginTop: 30, fontSize: 16, textAlign: 'center' },
 });

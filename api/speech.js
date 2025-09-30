@@ -10,18 +10,20 @@ export const config = {
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    const form = new formidable.IncomingForm();
+    const form = formidable({ multiples: false });
+
     form.parse(req, async (err, fields, files) => {
       if (err) return res.status(500).json({ error: err.message });
 
-      const file = fs.createReadStream(files.file.filepath);
-
       try {
+        const fileStream = fs.createReadStream(files.file.filepath);
+
         const whisperResp = await openai.audio.transcriptions.create({
-          file,
+          file: fileStream,
           model: 'whisper-1',
         });
 
+        // Matnni qaytarish
         res.status(200).json({ text: whisperResp.text });
       } catch (e) {
         res.status(500).json({ error: e.message });
