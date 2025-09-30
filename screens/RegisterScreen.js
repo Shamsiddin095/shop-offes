@@ -171,7 +171,7 @@ export default function RegisterScreen({ navigation }) {
       />
       <TextInput
         style={styles.input}
-        placeholder="Dukon nomi"
+        placeholder="o'quv kurs nomi"
         value={dukon}
         onChangeText={setDukon}
       />
