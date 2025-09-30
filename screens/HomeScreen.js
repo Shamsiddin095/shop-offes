@@ -11,8 +11,16 @@ export default function HomeScreen() {
 
   const startRecording = async () => {
     try {
-      await Audio.requestPermissionsAsync();
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true });
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status !== 'granted') {
+        Alert.alert('Xatolik', 'Iltimos, mikrofon ruxsatini bering');
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
 
       const rec = new Audio.Recording();
       await rec.prepareToRecordAsync(
@@ -28,10 +36,13 @@ export default function HomeScreen() {
 
   const stopRecording = async () => {
     try {
+      if (!recording) return;
+
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
 
+      // Backendga audio yuborish
       const formData = new FormData();
       formData.append('file', {
         uri,
@@ -39,22 +50,27 @@ export default function HomeScreen() {
         type: 'audio/wav',
       });
 
-      // Whisper API
       const speechRes = await fetch(`${API_URL}/speech`, {
         method: 'POST',
         body: formData,
       });
-      const speechData = await speechRes.json();
-      const text = speechData.text;
 
-      // GPT analyze API
-      const analyzeRes = await fetch(`${API_URL}/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      const analyzeData = await analyzeRes.json();
-      setResult(analyzeData.output);
+      const speechData = await speechRes.json();
+      if (speechRes.ok) {
+        const text = speechData.text;
+
+        // Backendga matn yuborish (GPT)
+        const analyzeRes = await fetch(`${API_URL}/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        });
+
+        const analyzeData = await analyzeRes.json();
+        setResult(analyzeData.output);
+      } else {
+        Alert.alert('Xatolik', speechData.error || 'Server javobi xato');
+      }
     } catch (err) {
       console.error(err);
       Alert.alert('Xatolik', 'Ovoz tanib olish yoki tahlil qilishda xatolik');
@@ -63,7 +79,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🎤 Ovoz orqali tahlil</Text>
+      <Text style={styles.title}>🎤 Ovoz orqali zamon aniqlash va tarjima</Text>
 
       <TouchableOpacity
         style={styles.button}

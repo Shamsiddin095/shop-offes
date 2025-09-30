@@ -1,20 +1,17 @@
 import OpenAI from 'openai';
-import formidable from 'formidable';
+import { IncomingForm } from 'formidable';
 import fs from 'fs';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export const config = {
-  api: { bodyParser: false },
-};
+export const config = { api: { bodyParser: false } };
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    const form = formidable({ multiples: false });
+    const form = new IncomingForm();
 
     form.parse(req, async (err, fields, files) => {
       if (err) return res.status(500).json({ error: err.message });
-
       try {
         const fileStream = fs.createReadStream(files.file.filepath);
 
@@ -23,7 +20,6 @@ export default async function handler(req, res) {
           model: 'whisper-1',
         });
 
-        // Matnni qaytarish
         res.status(200).json({ text: whisperResp.text });
       } catch (e) {
         res.status(500).json({ error: e.message });
